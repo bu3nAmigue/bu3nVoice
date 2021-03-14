@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <title>Voice Synth</title>
+</head>
+<body>
+    
+    <h1>¡Tu bot que canta!</h1>
+    <form action="" id="voiceForm">
+       <div>
+           <label for="lyrics">Letra</label>
+           <input type="text" id="lyrics" placeholder="quien dijo código yo canto código">
+       </div> 
+       <div>
+        <label for="notes">Notas</label>
+        <input type="text" id="notes" placeholder="0,2,2,5,2,5">
+    </div> 
+    <div>
+        <label for="oct">Octava</label>
+        <input type="text" id="oct" placeholder="5">
+    </div> 
+    <div>
+        <label for="dur">Duraciones</label>
+        <input type="text" id="dur" placeholder="0.5,0.5,0.5,0.5,0.5,1.5">
+    </div> 
+    <div>
+        <label for="tempo">Tempo</label>
+        <input type="text" id="tempo" placeholder="120">
+    </div> 
+    <div>
+        <label for="lang">Idioma</label>
+        <input type="text" id="lang" placeholder="es">
+    </div>
+    <div>
+        <label for="scale">Escala</label>
+        <input type="text" id="scale" placeholder="0,2,4,5,7,9,11">
+    </div>
+    <div>
+        <button type="submit" id="btnSubmit">
+            Generar
+        </button>
+    </div>
+    </form>
+
+    <script>
+        /* Event Listener */
+        const voiceForm = document.querySelector("#voiceForm");
+        if(voiceForm) {
+            voiceForm.addEventListener("submit", function(e) {
+                submitForm(e, this);
+            })
+        }
+
+        /* Build JSON */
+        async function submitForm(e, form) {
+            // Prevent reloading page
+            e.preventDefault();
+            // Submit the form
+            // User interaction
+            const btnSubmit = document.getElementById("btnSubmit");
+            btnSubmit.disabled = true;
+            setTimeout(() => btnSubmit.disabled = false, 2000);
+            // Build JSON body
+            const jsonFormData = buildJsonFormData(form);
+            // Build headers
+            const headers = buildHeaders();
+            // Request & Response
+            fetch('http://localhost:8080/voice', {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(jsonFormData)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = "cantando.wav";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+        };
+
+        function buildJsonFormData(form) {
+            var lyrics = form.elements['lyrics'].value
+            var notes = form.elements['notes'].value
+            var oct = form.elements['oct'].value
+            var dur = form.elements['dur'].value
+            var tempo = form.elements['tempo'].value
+            var lang = form.elements['lang'].value
+            var scale = form.elements['scale'].value
+
+            const jsonFormData = {
+                "lyrics": lyrics,
+                /*
+                "notes": notes.split`,`.map(x=>+x),
+                "oct": parseInt(oct),
+                "dur": dur.split`,`.map(x=>+x),
+                "tempo": parseInt(tempo),
+                "lang": lang,
+                "scale": scale.split`,`.map(x=>+x)
+                */
+            }
+            return jsonFormData;
+        };
+
+        function buildHeaders() {
+            const headers = {
+                "Content-Type": "application/json"
+            };
+            return headers;
+        };
+
+        // Submit the request using Fetch
+        async function performPostHttpRequest(fetchLink, headers, body) {
+            if(!fetchLink || !headers || !body) {
+                throw new Error("One or more POST request parameters was not passed.");
+            }
+            try {
+                const rawResponse = await fetch(fetchLink, {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+                const content = await rawResponse.json();
+                return content;
+            }
+            catch(err) {
+                console.error(`Error at fetch POST: ${err}`);
+                throw err;
+            }
+        };
+
+    </script>
+</body>
+</html>
